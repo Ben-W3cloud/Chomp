@@ -1,0 +1,18 @@
+{
+  "name": "chomp-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "cron": "node cron/standalone.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.12.0",
+    "dotenv": "^16.4.5",
+    "jsonwebtoken": "^9.0.2",
+    "node-cron": "^3.0.3",
+    "firebase-admin": "^12.3.1"
+  }
+}

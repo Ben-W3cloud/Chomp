@@ -1,10 +1,25 @@
 import 'package:flutter/material.dart';
+import '../models/repo.dart';
 
 class RepoCard extends StatelessWidget {
-  const RepoCard({super.key});
+  const RepoCard({super.key, required this.repo, this.onTap});
+  final Repo repo;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox.shrink();
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: ListTile(
+        onTap: onTap,
+        title: Text(repo.name),
+        subtitle: Text(repo.description ?? repo.fullName),
+        trailing: repo.isAutoWatched
+            ? const Chip(label: Text('AUTO'))
+            : repo.isManuallyWatched
+                ? const Chip(label: Text('WATCHED'))
+                : null,
+      ),
+    );
   }
 }

@@ -1,10 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/feed_item.dart';
+import 'repo_provider.dart';
 
-class FeedProvider extends StatelessWidget {
-  const FeedProvider({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox.shrink();
-  }
-}
+final feedProvider = FutureProvider.autoDispose<List<FeedItem>>((ref) async {
+  final data = ref.watch(chompDataServiceProvider);
+  return data.getFeed();
+});
