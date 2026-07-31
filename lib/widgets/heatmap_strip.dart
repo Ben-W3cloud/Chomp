@@ -1,7 +1,15 @@
+/// Commit heatmap strip widget.
+///
+/// Placeholder for a 30-day commit activity heatmap visualization.
+/// Will display commit frequency as colored squares similar to
+/// GitHub's contribution graph.
+///
+/// Requires a backend endpoint to fetch commit history data.
+/// During the UI polish pass, implement the actual heatmap using
+/// the commit data from the backend.
+
 import 'package:flutter/material.dart';
 
-/// Placeholder — will fetch commit history via the backend and render
-/// a real 30-day heatmap + streak counter during the UI polish pass.
 class HeatmapStrip extends StatelessWidget {
   const HeatmapStrip({super.key, required this.repoId});
   final String repoId;

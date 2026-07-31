@@ -1,3 +1,13 @@
+/// User profile screen.
+///
+/// Displays user information and provides access to:
+/// - Watchlist management
+/// - Notification settings
+/// - GitHub account disconnection
+///
+/// Shows the user's GitHub username and provides navigation to
+/// other profile-related screens.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
@@ -10,14 +20,17 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: ListView(
         children: [
+          // User info section
           ListTile(
             leading: const Icon(Icons.person),
             title: Text(auth.user?.githubUsername ?? 'Not signed in'),
           ),
+          // Watchlist management
           ListTile(
             leading: const Icon(Icons.list_alt),
             title: const Text('Manage Watchlist'),
@@ -25,6 +38,7 @@ class ProfileScreen extends ConsumerWidget {
               MaterialPageRoute(builder: (_) => const WatchlistManagerScreen()),
             ),
           ),
+          // Notification settings
           ListTile(
             leading: const Icon(Icons.notifications_outlined),
             title: const Text('Notification Settings'),
@@ -33,6 +47,7 @@ class ProfileScreen extends ConsumerWidget {
                   builder: (_) => const NotificationSettingsScreen()),
             ),
           ),
+          // Sign out
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Disconnect GitHub'),

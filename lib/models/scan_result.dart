@@ -1,6 +1,11 @@
 enum QualitativeRating { critical, poor, standard, good, great, excellent }
 
+/// Extension methods for [QualitativeRating].
+///
+/// Provides conversion between enum values and their string labels,
+/// which is needed for JSON serialization/deserialization.
 extension QualitativeRatingX on QualitativeRating {
+  /// Creates a [QualitativeRating] from a case-insensitive string label.
   static QualitativeRating fromLabel(String label) {
     switch (label.toLowerCase()) {
       case 'excellent':
@@ -19,6 +24,7 @@ extension QualitativeRatingX on QualitativeRating {
     }
   }
 
+  /// Human-readable label for this rating.
   String get label {
     switch (this) {
       case QualitativeRating.excellent:
@@ -37,14 +43,33 @@ extension QualitativeRatingX on QualitativeRating {
   }
 }
 
+/// Complete scan result for a single repository.
+///
+/// Contains numeric scores (0-100) from NVIDIA and qualitative ratings
+/// from Groq, plus a list of specific findings/issues discovered.
 class ScanResult {
+  /// Unique identifier for this scan result.
   final String id;
+
+  /// Foreign key to the scanned repository.
   final String repoId;
+
+  /// Security score from NVIDIA (0-100, higher is better).
   final int? securityScore;
+
+  /// Code quality score from NVIDIA (0-100, higher is better).
   final int? codeQualityScore;
+
+  /// Documentation quality rating from Groq.
   final QualitativeRating? docsRating;
+
+  /// Test coverage rating from Groq.
   final QualitativeRating? testsRating;
+
+  /// List of specific findings/issues discovered during the scan.
   final List<String> findings;
+
+  /// Timestamp when the scan was completed.
   final DateTime scannedAt;
 
   const ScanResult({
@@ -58,6 +83,10 @@ class ScanResult {
     required this.scannedAt,
   });
 
+  /// Creates a [ScanResult] from a JSON map returned by the backend.
+  ///
+  /// Handles null scores/ratings and parses the findings array from
+  /// JSONB in the database.
   factory ScanResult.fromJson(Map<String, dynamic> json) => ScanResult(
         id: json['id'] as String,
         repoId: json['repo_id'] as String,

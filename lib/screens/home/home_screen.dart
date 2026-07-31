@@ -1,3 +1,13 @@
+/// Home screen with bottom navigation.
+///
+/// The main screen of the app after signing in. Contains:
+/// - Home tab: List of repositories with pull-to-refresh
+/// - Insights tab: Placeholder for AI-powered weekly summaries
+/// - Feed tab: Activity feed of scan completions
+/// - Profile tab: User settings and watchlist management
+///
+/// Initializes repo loading and FCM on startup.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/repo_provider.dart';
@@ -21,6 +31,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    // Load repos and initialize FCM on startup
     Future.microtask(() async {
       await ref.read(repoProvider.notifier).loadFromCache();
       await ref.read(repoProvider.notifier).syncFromGitHub();
@@ -55,6 +66,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
+/// Home tab showing the list of repositories.
+///
+/// Displays repos in a scrollable list with pull-to-refresh.
+/// Each repo card shows the name, description, and watch status.
 class _HomeTab extends ConsumerWidget {
   const _HomeTab();
 

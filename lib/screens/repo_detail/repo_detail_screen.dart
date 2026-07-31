@@ -1,3 +1,15 @@
+/// Repository detail screen.
+///
+/// Shows detailed scan results for a single repository including:
+/// - Security and code quality scores (from NVIDIA)
+/// - Documentation and test ratings (from Groq)
+/// - Commit heatmap (placeholder - requires backend endpoint)
+/// - Scan button to trigger a new manual scan
+/// - Live scan log showing phase progress
+///
+/// Loads the latest cached scan result on init and supports
+/// triggering new scans via SSE.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/repo.dart';
@@ -19,12 +31,14 @@ class _RepoDetailScreenState extends ConsumerState<RepoDetailScreen> {
   @override
   void initState() {
     super.initState();
+    // Load the latest cached scan result for this repo
     Future.microtask(
         () => ref.read(scanProvider.notifier).loadLatest(widget.repo.id));
   }
 
   @override
   Widget build(BuildContext context) {
+    // Get the scan state for this specific repo
     final scanState =
         ref.watch(scanProvider)[widget.repo.id] ?? const RepoScanState();
     final result = scanState.latestResult;
@@ -34,6 +48,7 @@ class _RepoDetailScreenState extends ConsumerState<RepoDetailScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Score gauges grid
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
@@ -49,17 +64,22 @@ class _RepoDetailScreenState extends ConsumerState<RepoDetailScreen> {
             ],
           ),
           const SizedBox(height: 16),
+          // Commit heatmap placeholder
           HeatmapStrip(repoId: widget.repo.id),
           const SizedBox(height: 16),
+          // Repo description
           Text(widget.repo.description ?? 'No description yet.'),
           const SizedBox(height: 16),
+          // Manual scan button
           FilledButton(
             onPressed: scanState.isScanning
                 ? null
                 : () => ref.read(scanProvider.notifier).runScan(widget.repo.id),
             child: Text(scanState.isScanning ? 'Scanning…' : 'Scan Again'),
           ),
+          // Live scan log (shown during/after scan)
           if (scanState.log.isNotEmpty) ScanLogView(entries: scanState.log),
+          // Error message (if scan failed)
           if (scanState.error != null)
             Padding(
               padding: const EdgeInsets.only(top: 12),

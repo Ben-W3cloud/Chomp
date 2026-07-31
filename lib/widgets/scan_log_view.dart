@@ -1,3 +1,11 @@
+/// Scan log viewer widget.
+///
+/// Displays a live terminal-style log of scan phase events.
+/// Shows each phase as a colored line with a bullet point, creating
+/// a real-time feed of the scan progress.
+///
+/// Used in the repo detail screen during and after manual scans.
+
 import 'package:flutter/material.dart';
 import '../services/scan_engine.dart';
 

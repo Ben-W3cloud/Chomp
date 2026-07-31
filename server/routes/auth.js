@@ -1,3 +1,8 @@
+/// Authentication routes.
+///
+/// Handles GitHub OAuth flow:
+/// - POST /github/oauth/exchange - Exchange code for session token
+
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import { query } from '../db.js';
@@ -6,14 +11,26 @@ import { exchangeCodeForToken, fetchGitHubUser } from '../lib/githubClient.js';
 
 export const authRouter = Router();
 
+/// Exchange GitHub OAuth code for a Chomp session token.
+///
+/// This is the final step of the OAuth flow. The client has already
+/// obtained an authorization code from GitHub and sends it here.
+/// We exchange it for a GitHub access token, then create/update the
+/// user in our database and return a Chomp JWT.
+///
+/// @route POST /github/oauth/exchange
+/// @param {string} code - GitHub OAuth authorization code
+/// @returns {Object} Session token and user info
 authRouter.post('/github/oauth/exchange', async (req, res) => {
   const { code } = req.body;
   if (!code) return res.status(400).json({ error: 'Missing code' });
 
   try {
+    // Exchange OAuth code for GitHub access token
     const accessToken = await exchangeCodeForToken(code);
     const githubUser = await fetchGitHubUser(accessToken);
 
+    // Create or update user in database
     const existing = await query('select * from users where github_id = $1', [githubUser.id]);
     let userRow;
     if (existing.rows.length > 0) {
@@ -32,6 +49,7 @@ authRouter.post('/github/oauth/exchange', async (req, res) => {
       ).rows[0];
     }
 
+    // Issue Chomp JWT (30 day expiry)
     const sessionToken = jwt.sign({ sub: userRow.id }, process.env.SESSION_JWT_SECRET, { expiresIn: '30d' });
 
     res.json({

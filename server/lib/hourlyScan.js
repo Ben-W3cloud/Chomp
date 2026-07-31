@@ -1,7 +1,23 @@
+/// Hourly scan batch runner.
+///
+/// Scans all watched repositories (auto + manual) on a schedule.
+/// This is the "set it and forget it" engine that keeps the user's
+/// watchlist up to date without manual intervention.
+///
+/// Can be run two ways:
+/// 1. As a standalone cron process (node-cron) - see cron/standalone.js
+/// 2. Via HTTP trigger - see routes/internalCron.js
+
 import { query } from '../db.js';
 import { decryptToken } from './crypto.js';
 import { scanRepo } from './scanRepo.js';
 
+/// Runs a full scan of all watched repositories.
+///
+/// Queries the database for all repos that are either auto-watched
+/// or manually watched, then runs a full scan on each one.
+///
+/// @returns {Promise<Object>} Results summary with scanned/failed counts
 export async function runHourlyScan() {
   console.log(`[${new Date().toISOString()}] Starting hourly scan...`);
   const watched = await query(

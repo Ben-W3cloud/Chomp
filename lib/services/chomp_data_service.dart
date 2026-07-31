@@ -1,15 +1,30 @@
+/// Data access service for reading app data from the backend.
+///
+/// This service provides methods to fetch repositories, scan history,
+/// alerts, and feed items from the Chomp backend. All data is stored
+/// in Neon Postgres and accessed via REST endpoints.
+///
+/// The client never opens a direct Postgres connection — mobile apps
+/// and raw database drivers/credentials don't mix. All database
+/// operations happen server-side.
+
 import '../models/repo.dart';
 import '../models/scan_result.dart';
 import '../models/alert.dart';
 import '../models/feed_item.dart';
 import 'api_client.dart';
 
-/// Reads app data back from our backend, which is backed by Neon
-/// Postgres. The client never opens a direct Postgres connection —
-/// mobile apps and raw DB drivers/credentials don't mix.
+/// Service for reading app data via the backend API.
+///
+/// Wraps all GET endpoints that retrieve data from Neon. For write
+/// operations (watch/unwatch), see [RepoNotifier] in the providers.
 class ChompDataService {
   final _api = ApiClient.instance;
 
+  /// Fetches all repositories for the current user.
+  ///
+  /// Returns repos with their watch status flags (auto/manual).
+  /// Used to populate the home screen repo list.
   Future<List<Repo>> getRepos() async {
     final res = await _api.get('/repos') as Map<String, dynamic>;
     return (res['repos'] as List)
@@ -17,6 +32,10 @@ class ChompDataService {
         .toList();
   }
 
+  /// Fetches scan history for a specific repository.
+  ///
+  /// [limit] controls how many past scans to return (default: 30).
+  /// Results are ordered by scan time, most recent first.
   Future<List<ScanResult>> getScanHistory(String repoId,
       {int limit = 30}) async {
     final res = await _api.get('/repos/$repoId/scans?limit=$limit')
@@ -26,11 +45,19 @@ class ChompDataService {
         .toList();
   }
 
+  /// Fetches the most recent scan result for a repository.
+  ///
+  /// Returns null if the repo has never been scanned.
+  /// Used to display the latest scores on the repo detail screen.
   Future<ScanResult?> getLatestScan(String repoId) async {
     final history = await getScanHistory(repoId, limit: 1);
     return history.isEmpty ? null : history.first;
   }
 
+  /// Fetches all alerts for a specific repository.
+  ///
+  /// Alerts are created when scans discover new findings or when
+  /// security scores drop significantly.
   Future<List<ChompAlert>> getAlerts(String repoId) async {
     final res = await _api.get('/repos/$repoId/alerts') as Map<String, dynamic>;
     return (res['alerts'] as List)
@@ -38,6 +65,11 @@ class ChompDataService {
         .toList();
   }
 
+  /// Fetches the user's activity feed.
+  ///
+  /// [limit] controls how many items to return (default: 50).
+  /// Currently only includes scan_complete items; other types
+  /// require GitHub webhook integration.
   Future<List<FeedItem>> getFeed({int limit = 50}) async {
     final res = await _api.get('/feed?limit=$limit') as Map<String, dynamic>;
     return (res['items'] as List)
@@ -45,8 +77,13 @@ class ChompDataService {
         .toList();
   }
 
+  /// Adds a repository to the user's manual watchlist.
+  ///
+  /// The backend enforces the maximum watchlist size limit.
   Future<void> addToWatchlist(String repoId) =>
       _api.post('/repos/$repoId/watch', {});
+
+  /// Removes a repository from the user's manual watchlist.
   Future<void> removeFromWatchlist(String repoId) =>
       _api.post('/repos/$repoId/unwatch', {});
 }

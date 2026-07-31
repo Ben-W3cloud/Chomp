@@ -1,3 +1,11 @@
+/// Repository card widget.
+///
+/// Displays a repository in the home screen list. Shows the repo name,
+/// description, and watch status chip (AUTO for auto-watched, WATCHED
+/// for manually watched repos).
+///
+/// Tapping the card navigates to the repo detail screen.
+
 import 'package:flutter/material.dart';
 import '../models/repo.dart';
 

@@ -1,3 +1,13 @@
+/// Insights screen - AI-powered weekly summaries.
+///
+/// Placeholder for the insights feature. In the future, this will
+/// display AI-generated weekly summaries of repository health,
+/// security trends, and code quality changes.
+///
+/// Backend follow-up: add a GET /insights endpoint that asks Groq
+/// to summarise the user's recent scan_results + feed_items, cache
+/// the result, and have this screen fetch it.
+
 import 'package:flutter/material.dart';
 
 class InsightsScreen extends StatelessWidget {

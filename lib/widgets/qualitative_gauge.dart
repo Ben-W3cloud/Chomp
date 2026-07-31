@@ -1,9 +1,16 @@
+/// Qualitative rating gauge widget.
+///
+/// Displays a qualitative rating (Excellent, Great, Good, Standard,
+/// Poor, Critical) as a text label. This is used for documentation
+/// and test coverage ratings from Groq.
+///
+/// This is a placeholder implementation. During the UI polish pass,
+/// replace with a proper radial dial or badge with color coding
+/// based on the rating level.
+
 import 'package:flutter/material.dart';
 import '../models/scan_result.dart';
 
-/// Docs / Tests gauge — same idea as SpeedometerGauge but the value is
-/// one of six labels. Placeholder styling; swap for a real dial with a
-/// fixed-position needle during the UI polish pass.
 class QualitativeGauge extends StatelessWidget {
   const QualitativeGauge(
       {super.key, required this.label, required this.rating});

@@ -1,14 +1,23 @@
+/// Numeric score gauge widget.
+///
+/// Displays a numeric score (0-100) as a linear progress bar with
+/// color coding:
+/// - Red: 0-40 (poor)
+/// - Amber: 41-70 (standard)
+/// - Green: 71-100 (good)
+///
+/// This is a placeholder implementation. During the UI polish pass,
+/// replace with a proper radial dial using fl_chart or
+/// syncfusion_flutter_gauges for a more polished look.
+
 import 'package:flutter/material.dart';
 
-/// Numeric 0-100 gauge for Security / Code Quality. This is a linear
-/// bar placeholder — swap in a real radial dial (fl_chart or
-/// syncfusion_flutter_gauges) during the UI polish pass. Kept simple
-/// now so real scan scores have somewhere to render immediately.
 class SpeedometerGauge extends StatelessWidget {
   const SpeedometerGauge({super.key, required this.label, required this.value});
   final String label;
   final int? value;
 
+  /// Determines the color based on the score value.
   Color _color(int v) {
     if (v <= 40) return Colors.red;
     if (v <= 70) return Colors.amber;

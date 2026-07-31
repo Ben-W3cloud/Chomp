@@ -1,3 +1,12 @@
+/// Welcome/onboarding screen.
+///
+/// The first screen users see when they open the app without being
+/// signed in. Displays the app name, tagline, and a "Connect GitHub"
+/// button that initiates the OAuth flow.
+///
+/// Listens to auth state changes and automatically navigates to
+/// [HomeScreen] when the user signs in successfully.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
@@ -9,6 +18,8 @@ class WelcomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
+
+    // Listen for auth state changes to navigate on sign in
     ref.listen(authProvider, (previous, next) {
       if (next.isSignedIn) {
         Navigator.of(context).pushReplacement(

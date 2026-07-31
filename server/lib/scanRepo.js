@@ -1,3 +1,16 @@
+/// Repository scan orchestrator.
+///
+/// Coordinates the full scan pipeline for a single repository:
+/// 1. Fetch repo data from GitHub (README, file tree, commits)
+/// 2. Pick sample files for AI analysis
+/// 3. Run NVIDIA for code quality + security scores
+/// 4. Run Groq for documentation + test ratings
+/// 5. Store results in Neon database
+/// 6. Create alerts for new findings
+/// 7. Send push notifications if needed
+///
+/// This is the heart of the Chomp app - where all the AI magic happens.
+
 import { query } from '../db.js';
 import { fetchReadme, fetchRepoTree, fetchCommits, fetchFileContent } from './githubClient.js';
 import { analyseCodeAndSecurity } from './nvidiaClient.js';
@@ -9,6 +22,11 @@ import { sendPush } from './fcm.js';
  * Runs a full scan for one repo. `onPhase(phase, message, payload?)` is
  * called at each step — the SSE route uses it to stream live updates
  * to the phone; the hourly cron job ignores it (default no-op).
+ *
+ * @param {Object} repoRow - Repository database row
+ * @param {string} accessToken - GitHub access token
+ * @param {Function} onPhase - Callback for scan phase updates
+ * @returns {Promise<Object>} Inserted scan result row
  */
 export async function scanRepo(repoRow, accessToken, onPhase = () => {}) {
   onPhase('fetching', `Fetching ${repoRow.full_name} from GitHub...`);
@@ -78,6 +96,18 @@ export async function scanRepo(repoRow, accessToken, onPhase = () => {}) {
   return inserted;
 }
 
+/**
+ * Creates alerts for new findings and sends push notifications.
+ *
+ * Alerts are only created if:
+ * - There are new findings not in the previous scan
+ * - Security score dropped by threshold or more
+ *
+ * @param {Object} repoRow - Repository database row
+ * @param {Object} previous - Previous scan result (if any)
+ * @param {Object} current - Current scan result
+ * @param {Array} findings - List of findings from current scan
+ */
 async function maybeCreateAlertsAndNotify(repoRow, previous, current, findings) {
   const previousFindings = previous?.findings ?? [];
   const newFindings = findings.filter((f) => !previousFindings.includes(f));
@@ -106,6 +136,17 @@ async function maybeCreateAlertsAndNotify(repoRow, previous, current, findings) 
   }
 }
 
+/**
+ * Picks a small sample of files for AI analysis.
+ *
+ * Deliberately limited to avoid exceeding AI model context limits
+ * and to keep API costs low. Prioritizes common code file types.
+ *
+ * @param {string} accessToken - GitHub access token
+ * @param {string} fullName - Repository full name
+ * @param {Array} fileTree - Complete file tree
+ * @returns {Promise<Array>} Array of {path, content} objects
+ */
 async function pickSampleFiles(accessToken, fullName, fileTree) {
   // Deliberately small and cheap — full repos can blow past model
   // context limits and the free-tier rate limits on NVIDIA/Groq. Grab

@@ -1,3 +1,13 @@
+/// Repository routes.
+///
+/// Handles repository synchronization and watchlist management:
+/// - POST /github/sync-repos - Sync repos from GitHub
+/// - GET /repos - List all repos for the user
+/// - POST /repos/:id/watch - Add repo to watchlist
+/// - POST /repos/:id/unwatch - Remove repo from watchlist
+/// - GET /repos/:id/scans - Get scan history for a repo
+/// - GET /repos/:id/alerts - Get alerts for a repo
+
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { query } from '../db.js';
@@ -7,15 +17,24 @@ import { AUTO_WATCH_COUNT, MAX_MANUAL_WATCHLIST } from '../lib/constants.js';
 
 export const reposRouter = Router();
 
+/// Sync repositories from GitHub.
+///
+/// Fetches the user's repos from GitHub, upserts them into the database,
+/// and sets auto-watch flags for the top N most recently active repos.
+///
+/// @route POST /github/sync-repos
+/// @returns {Object} Updated repo list
 reposRouter.post('/github/sync-repos', requireAuth, async (req, res) => {
   try {
     const userRow = (await query('select * from users where id = $1', [req.userId])).rows[0];
     const accessToken = decryptToken(userRow.access_token_encrypted);
     const githubRepos = await fetchRepos(accessToken);
 
+    // Sort by last push date and mark top N as auto-watched
     const sorted = [...githubRepos].sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at));
     const autoWatchedIds = new Set(sorted.slice(0, AUTO_WATCH_COUNT).map((r) => r.id));
 
+    // Upsert each repo into database
     for (const repo of githubRepos) {
       await query(
         `insert into repos (user_id, github_repo_id, name, full_name, description, language, default_branch, is_auto_watched, last_pushed_at)
@@ -52,6 +71,10 @@ reposRouter.post('/github/sync-repos', requireAuth, async (req, res) => {
   }
 });
 
+/// List all repositories for the authenticated user.
+///
+/// @route GET /repos
+/// @returns {Object} List of repos with watch status
 reposRouter.get('/repos', requireAuth, async (req, res) => {
   const result = await query('select * from repos where user_id = $1 order by last_pushed_at desc', [
     req.userId,
@@ -59,6 +82,12 @@ reposRouter.get('/repos', requireAuth, async (req, res) => {
   res.json({ repos: result.rows.map(toRepoJson) });
 });
 
+/// Add a repository to the manual watchlist.
+///
+/// Enforces the maximum manual watchlist size limit.
+///
+/// @route POST /repos/:id/watch
+/// @returns {Object} Success status
 reposRouter.post('/repos/:id/watch', requireAuth, async (req, res) => {
   const countRow = await query(
     'select count(*) from repos where user_id = $1 and is_manually_watched = true',
@@ -74,6 +103,10 @@ reposRouter.post('/repos/:id/watch', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+/// Remove a repository from the manual watchlist.
+///
+/// @route POST /repos/:id/unwatch
+/// @returns {Object} Success status
 reposRouter.post('/repos/:id/unwatch', requireAuth, async (req, res) => {
   await query('update repos set is_manually_watched = false where id = $1 and user_id = $2', [
     req.params.id,
@@ -82,6 +115,11 @@ reposRouter.post('/repos/:id/unwatch', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+/// Get scan history for a repository.
+///
+/// @route GET /repos/:id/scans
+/// @param {number} limit - Max number of scans to return (default: 30)
+/// @returns {Object} List of scan results
 reposRouter.get('/repos/:id/scans', requireAuth, async (req, res) => {
   const limit = Number(req.query.limit ?? 30);
   const result = await query(
@@ -91,6 +129,10 @@ reposRouter.get('/repos/:id/scans', requireAuth, async (req, res) => {
   res.json({ scans: result.rows });
 });
 
+/// Get alerts for a repository.
+///
+/// @route GET /repos/:id/alerts
+/// @returns {Object} List of alerts
 reposRouter.get('/repos/:id/alerts', requireAuth, async (req, res) => {
   const result = await query('select * from alerts where repo_id = $1 order by created_at desc', [
     req.params.id,
@@ -98,6 +140,7 @@ reposRouter.get('/repos/:id/alerts', requireAuth, async (req, res) => {
   res.json({ alerts: result.rows });
 });
 
+/// Converts a database row to a JSON-serializable repo object.
 function toRepoJson(row) {
   return {
     id: row.id,

@@ -1,5 +1,13 @@
+/// NVIDIA AI client for code analysis.
+///
+/// Sends repository code samples to NVIDIA's API for analysis.
+/// Returns security scores, code quality scores, and specific findings.
+///
+/// Uses the NVIDIA NIM or NVIDIA AI Foundation API endpoint.
+
 import { parseJsonSafely } from './safeJson.js';
 
+/// System prompt that instructs the AI to analyze code and security.
 const SYSTEM_PROMPT = `You are a static analysis engine. You will be given a repository's file tree, its README, and a sample of source files. Respond with ONLY valid JSON, no markdown fences, no prose, matching exactly this shape:
 {
   "security_score": <integer 0-100>,
@@ -9,6 +17,13 @@ const SYSTEM_PROMPT = `You are a static analysis engine. You will be given a rep
 }
 Findings should be short, specific, and actionable — reference actual file names where possible. If you cannot assess something, give your best estimate rather than omitting the field.`;
 
+/// Analyzes a repository's code and security using NVIDIA AI.
+///
+/// @param {Object} params - Analysis parameters
+/// @param {string} params.fullName - Repository full name (owner/repo)
+/// @param {Array} params.fileTree - List of file paths in the repository
+/// @param {Array} params.sampleFiles - Sample file contents to analyze
+/// @returns {Promise<Object>} Analysis results with scores and findings
 export async function analyseCodeAndSecurity({ fullName, fileTree, sampleFiles }) {
   const url = `${process.env.NVIDIA_BASE_URL}/chat/completions`;
   const userContent = [

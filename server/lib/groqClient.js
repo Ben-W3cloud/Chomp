@@ -1,5 +1,14 @@
+/// Groq AI client for documentation and test evaluation.
+///
+/// Sends repository README and file tree to Groq's API for analysis.
+/// Returns documentation quality and test coverage ratings.
+///
+/// Groq is used for these evaluations because it's faster and cheaper
+/// than NVIDIA for simpler text analysis tasks.
+
 import { parseJsonSafely } from './safeJson.js';
 
+/// System prompt that instructs the AI to evaluate docs and tests.
 const SYSTEM_PROMPT = `You are evaluating a code repository's documentation quality and test coverage. Respond with ONLY valid JSON, no markdown fences, no prose, matching exactly:
 {
   "docs_rating": "Excellent" | "Great" | "Good" | "Standard" | "Poor" | "Critical",
@@ -8,6 +17,13 @@ const SYSTEM_PROMPT = `You are evaluating a code repository's documentation qual
   "tests_reasoning": <string, one sentence>
 }`;
 
+/// Evaluates a repository's documentation and test coverage using Groq AI.
+///
+/// @param {Object} params - Evaluation parameters
+/// @param {string} params.fullName - Repository full name (owner/repo)
+/// @param {string} params.readme - README content
+/// @param {Array} params.fileTree - List of file paths in the repository
+/// @returns {Promise<Object>} Evaluation results with ratings and reasoning
 export async function evaluateDocsAndTests({ fullName, readme, fileTree }) {
   const url = `${process.env.GROQ_BASE_URL}/chat/completions`;
   const testFiles = fileTree.filter((f) => /test|spec/i.test(f.path));

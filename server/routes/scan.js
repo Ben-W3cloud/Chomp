@@ -1,3 +1,8 @@
+/// Scan routes.
+///
+/// Handles manual scan triggers via Server-Sent Events (SSE):
+/// - POST /scan/:repoId - Start a manual scan with live progress
+
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { query } from '../db.js';
@@ -6,6 +11,13 @@ import { scanRepo } from '../lib/scanRepo.js';
 
 export const scanRouter = Router();
 
+/// Start a manual scan for a repository.
+///
+/// Opens an SSE connection and streams phase updates as the scan
+/// progresses through fetching, analysis, and storage.
+///
+/// @route POST /scan/:repoId
+/// @returns {Stream} SSE stream of scan phase events
 scanRouter.post('/scan/:repoId', requireAuth, async (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
