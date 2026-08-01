@@ -11,6 +11,8 @@
 /// The raw GitHub access token never touches the client — the backend
 /// holds it securely and acts as a proxy for all GitHub API calls.
 
+library;
+
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';

@@ -12,6 +12,8 @@
 /// 4. Run Groq for documentation + test ratings
 /// 5. Store results in Neon and create alerts if needed
 
+library;
+
 import 'dart:async';
 import 'dart:convert';
 import '../core/constants.dart';

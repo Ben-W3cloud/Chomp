@@ -10,6 +10,8 @@
 /// The backend uses the registered FCM tokens to send push notifications
 /// when scans discover new findings or when security scores drop.
 
+library;
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../core/constants.dart';
 import 'api_client.dart';

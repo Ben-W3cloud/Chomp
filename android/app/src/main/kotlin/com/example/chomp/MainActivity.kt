@@ -1,4 +1,4 @@
-package com.example.dev_watch
+package com.example.chomp
 
 import io.flutter.embedding.android.FlutterActivity
 

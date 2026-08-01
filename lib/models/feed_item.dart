@@ -67,6 +67,7 @@ class FeedItem {
         createdAt: DateTime.parse(json['created_at'] as String),
       );
 }
+
 /// Feed item model representing an activity in the user's activity feed.
 ///
 /// Feed items can be:

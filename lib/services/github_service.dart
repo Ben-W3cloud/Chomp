@@ -8,6 +8,8 @@
 /// Call [syncRepos] on app startup and during pull-to-refresh to
 /// keep the local repo list up to date.
 
+library;
+
 import '../core/constants.dart';
 import '../models/repo.dart';
 import 'api_client.dart';

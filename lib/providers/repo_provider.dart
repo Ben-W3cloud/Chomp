@@ -10,6 +10,8 @@
 /// the backend during sync. Manual watchlist additions are limited
 /// to 4 repos per user.
 
+library;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/constants.dart';
 import '../models/repo.dart';

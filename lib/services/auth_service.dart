@@ -8,6 +8,8 @@
 /// Security note: The raw GitHub access token never touches the client.
 /// The backend exchanges it securely and returns a Chomp JWT instead.
 
+library;
+
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import '../core/env.dart';
 import '../core/constants.dart';

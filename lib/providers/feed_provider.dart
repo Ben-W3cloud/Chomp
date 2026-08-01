@@ -7,6 +7,8 @@
 /// server. Other feed item types (commits, PRs, issues) require
 /// GitHub webhook integration.
 
+library;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/feed_item.dart';
 import 'repo_provider.dart';

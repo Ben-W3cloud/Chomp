@@ -9,6 +9,8 @@
 /// Push notifications from Firebase (FCM) are received by [FcmService]
 /// and displayed using this service.
 
+library;
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 /// Service for showing local notifications on the device.

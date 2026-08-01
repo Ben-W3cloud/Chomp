@@ -8,6 +8,8 @@
 /// and raw database drivers/credentials don't mix. All database
 /// operations happen server-side.
 
+library;
+
 import '../models/repo.dart';
 import '../models/scan_result.dart';
 import '../models/alert.dart';
