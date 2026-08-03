@@ -28,7 +28,7 @@ class ChompUser {
   /// the Dart model's camelCase properties.
   factory ChompUser.fromJson(Map<String, dynamic> json) => ChompUser(
         id: json['id'] as String,
-        githubId: json['github_id'] as int,
+        githubId: int.parse(json['github_id'].toString()),
         githubUsername: json['github_username'] as String,
         avatarUrl: json['avatar_url'] as String?,
         createdAt: DateTime.parse(json['created_at'] as String),

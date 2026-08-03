@@ -51,7 +51,7 @@ class Repo {
   /// into [DateTime] objects.
   factory Repo.fromJson(Map<String, dynamic> json) => Repo(
         id: json['id'] as String,
-        githubRepoId: json['github_repo_id'] as int,
+        githubRepoId: _parseId(json['github_repo_id']),
         name: json['name'] as String,
         fullName: json['full_name'] as String,
         description: json['description'] as String?,
@@ -63,4 +63,11 @@ class Repo {
             ? DateTime.parse(json['last_pushed_at'] as String)
             : null,
       );
+}
+
+int _parseId(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String && value.isNotEmpty) return int.parse(value);
+  return 0; // fallback — shouldn't happen, but prevents a hard crash
 }
