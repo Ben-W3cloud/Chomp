@@ -195,7 +195,7 @@ class _AlertsSection extends StatelessWidget {
                       size: 26),
                   const SizedBox(height: 8),
                   Text(
-                    'All quiet — no alerts',
+                    'All quiet there are no alerts',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 4),

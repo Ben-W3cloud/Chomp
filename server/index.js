@@ -19,6 +19,7 @@ import { scanRouter } from './routes/scan.js';
 import { feedRouter } from './routes/feed.js';
 import { notificationsRouter } from './routes/notifications.js';
 import { internalCronRouter } from './routes/internalCron.js';
+import { webhookRouter } from './routes/webhooks.js';
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use(scanRouter);
 app.use(feedRouter);
 app.use(notificationsRouter);
 app.use(internalCronRouter);
+app.use(webhookRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => res.json({ ok: true }));
