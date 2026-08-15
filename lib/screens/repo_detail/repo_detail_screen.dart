@@ -147,6 +147,16 @@ class _RepoDetailScreenState extends ConsumerState<RepoDetailScreen> {
                           ?.copyWith(color: AppColors.danger),
                     ),
                   ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 16),
+                    color: AppColors.danger,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => ref
+                        .read(scanProvider.notifier)
+                        .dismissError(widget.repo.id),
+                    tooltip: 'Dismiss',
+                  ),
                 ],
               ),
             ),

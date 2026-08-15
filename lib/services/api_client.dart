@@ -80,12 +80,27 @@ class ApiClient {
   }
 
   /// Handles the HTTP response, throwing [ApiException] on error.
+  ///
+  /// Extracts a user-friendly error message from the response body
+  /// when possible, falling back to a generic message for non-JSON
+  /// or unexpected responses.
   dynamic _handle(http.Response res) {
     if (res.statusCode >= 200 && res.statusCode < 300) {
       if (res.body.isEmpty) return null;
       return jsonDecode(res.body);
     }
-    throw ApiException(res.statusCode, res.body);
+    String message;
+    try {
+      final body = jsonDecode(res.body);
+      message = body['error'] is String
+          ? body['error']
+          : 'Request failed. Please try again.';
+    } catch (_) {
+      message = res.statusCode >= 500
+          ? 'Server error. Please try again.'
+          : 'Request failed. Please try again.';
+    }
+    throw ApiException(res.statusCode, message);
   }
 
   /// Opens a Server-Sent Events connection.

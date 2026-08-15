@@ -63,6 +63,19 @@ class AuthService {
   /// handled by the backend on each request.
   Future<bool> isSignedIn() async => (await _api.sessionToken) != null;
 
+  /// Fetches the current authenticated user's profile from the backend.
+  ///
+  /// Calls GET /me using the stored session token. Returns null if
+  /// the token is expired or the request fails.
+  Future<ChompUser?> getCurrentUser() async {
+    try {
+      final response = await _api.get(ApiEndpoints.me) as Map<String, dynamic>;
+      return ChompUser.fromJson(response);
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Signs the user out by clearing the session token.
   Future<void> signOut() => _api.clearSession();
 }

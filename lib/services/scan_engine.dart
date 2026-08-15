@@ -105,7 +105,8 @@ class ScanEngine {
       }
       await controller.close();
     } catch (e) {
-      controller.add(ScanPhaseEvent(ScanPhase.error, 'Scan failed: $e'));
+      controller.add(
+          ScanPhaseEvent(ScanPhase.error, 'Scan failed. Please try again.'));
       await controller.close();
     }
   }

@@ -20,11 +20,19 @@ import { feedRouter } from './routes/feed.js';
 import { notificationsRouter } from './routes/notifications.js';
 import { internalCronRouter } from './routes/internalCron.js';
 import { webhookRouter } from './routes/webhooks.js';
+import { generalLimiter, authLimiter, scanLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
 
 // Parse JSON request bodies
 app.use(express.json());
+
+// Apply general rate limiting to all routes
+app.use(generalLimiter);
+
+// Stricter rate limiting for auth and scan endpoints
+app.use('/github/oauth/exchange', authLimiter);
+app.use('/scan', scanLimiter);
 
 // Mount route handlers
 app.use(authRouter);

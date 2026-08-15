@@ -36,6 +36,9 @@ class ApiEndpoints {
 
   /// Register an FCM device token for push notifications.
   static const registerDevice = '/notifications/register-device';
+
+  /// Fetch the current authenticated user's profile.
+  static const me = '/me';
 }
 
 /// Core application constants and API endpoint definitions.

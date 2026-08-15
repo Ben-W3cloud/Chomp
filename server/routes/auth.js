@@ -2,11 +2,13 @@
 ///
 /// Handles GitHub OAuth flow:
 /// - POST /github/oauth/exchange - Exchange code for session token
+/// - GET /me - Get current authenticated user profile
 
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import { query } from '../db.js';
-import { encryptToken } from '../lib/crypto.js';
+import { encryptToken, decryptToken } from '../lib/crypto.js';
+import { requireAuth } from '../middleware/auth.js';
 import { exchangeCodeForToken, fetchGitHubUser } from '../lib/githubClient.js';
 
 export const authRouter = Router();
@@ -65,5 +67,34 @@ authRouter.post('/github/oauth/exchange', async (req, res) => {
   } catch (err) {
     console.error('OAuth exchange failed', err);
     res.status(500).json({ error: 'GitHub OAuth exchange failed' });
+  }
+});
+
+/// Get the current authenticated user's profile.
+///
+/// Fetches the user from the database using the session token,
+/// then gets their GitHub avatar via the GitHub API.
+///
+/// @route GET /me
+/// @returns {Object} User profile
+authRouter.get('/me', requireAuth, async (req, res) => {
+  try {
+    const result = await query('select * from users where id = $1', [req.userId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const userRow = result.rows[0];
+    const accessToken = decryptToken(userRow.access_token_encrypted);
+    const githubUser = await fetchGitHubUser(accessToken);
+    res.json({
+      id: userRow.id,
+      github_id: Number(userRow.github_id),
+      github_username: userRow.github_username,
+      avatar_url: githubUser.avatar_url,
+      created_at: userRow.created_at,
+    });
+  } catch (err) {
+    console.error('GET /me failed', err);
+    res.status(500).json({ error: 'Failed to fetch user profile' });
   }
 });

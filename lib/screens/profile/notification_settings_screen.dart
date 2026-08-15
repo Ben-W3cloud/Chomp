@@ -151,7 +151,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Preferences currently live for this session only — persistence ships with the settings backend.',
+            'Preferences currently live for this session only - persistence ships with the settings backend.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: scheme.onSurface.withValues(alpha: 0.4),
                 ),

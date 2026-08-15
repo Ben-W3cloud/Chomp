@@ -58,15 +58,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   /// Restores the user's session on app startup.
   ///
-  /// Checks if a session token exists in secure storage. If not,
-  /// resets to the signed-out state.
-  ///
-  /// Note: This doesn't repopulate the user object — add a GET /me
-  /// endpoint on the backend if you need the profile to survive
-  /// app restarts cleanly.
+  /// Checks if a session token exists in secure storage. If found,
+  /// fetches the user profile from the backend via GET /me. If the
+  /// token is expired or the request fails, clears the session and
+  /// forces re-auth.
   Future<void> restoreSession() async {
+    state = state.copyWith(isLoading: true);
     final signedIn = await _authService.isSignedIn();
-    if (!signedIn) state = const AuthState();
+    if (!signedIn) {
+      state = const AuthState();
+      return;
+    }
+    final user = await _authService.getCurrentUser();
+    if (user != null) {
+      state = state.copyWith(isLoading: false, user: user);
+    } else {
+      // Token exists but /me failed — clear and force re-auth.
+      await _authService.signOut();
+      state = const AuthState();
+    }
   }
 }
 

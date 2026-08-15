@@ -105,6 +105,12 @@ class ScanNotifier extends StateNotifier<Map<String, RepoScanState>> {
     );
   }
 
+  /// Dismisses the error state for a specific repository.
+  void dismissError(String repoId) {
+    final current = stateFor(repoId);
+    _update(repoId, current.copyWith(error: null));
+  }
+
   /// Updates the state for a specific repository.
   void _update(String repoId, RepoScanState value) {
     state = {...state, repoId: value};

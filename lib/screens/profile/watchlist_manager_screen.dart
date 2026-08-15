@@ -21,6 +21,11 @@ class WatchlistManagerScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repoState = ref.watch(repoProvider);
+
+    // Load repos from cache if not already loaded.
+    if (repoState.repos.isEmpty && !repoState.isLoading) {
+      ref.read(repoProvider.notifier).loadFromCache();
+    }
     final scheme = Theme.of(context).colorScheme;
     final tokens = Theme.of(context).extension<AppTokens>()!;
     final notifier = ref.read(repoProvider.notifier);
@@ -60,7 +65,7 @@ class WatchlistManagerScreen extends ConsumerWidget {
                       style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 4),
                   Text(
-                    'Add repos below — Chomp will keep an eye on them hourly.',
+                    'Add repos below - Chomp will keep an eye on them hourly.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: scheme.onSurface.withValues(alpha: 0.5),

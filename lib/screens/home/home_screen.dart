@@ -10,6 +10,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/repo_provider.dart';
 import '../../services/fcm_service.dart';
 import '../../widgets/empty_state.dart';
@@ -19,6 +20,7 @@ import '../../widgets/skeleton.dart';
 import '../repo_detail/repo_detail_screen.dart';
 import '../feed/feed_screen.dart';
 import '../profile/profile_screen.dart';
+import '../onboarding/welcome_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -42,6 +44,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen for auth state changes — redirect to Welcome on sign out.
+    ref.listen(authProvider, (previous, next) {
+      if (!next.isSignedIn && next.user == null && !next.isLoading) {
+        Navigator.of(context).pushAndRemoveUntil(
+          PageRouteBuilder(
+            transitionDuration: AppMotion.standard,
+            pageBuilder: (_, __, ___) => const WelcomeScreen(),
+            transitionsBuilder: (_, animation, __, child) => FadeTransition(
+              opacity:
+                  CurvedAnimation(parent: animation, curve: AppMotion.curve),
+              child: child,
+            ),
+          ),
+          (route) => false,
+        );
+      }
+    });
+
     return Scaffold(
       body: IndexedStack(
         index: _tab,
