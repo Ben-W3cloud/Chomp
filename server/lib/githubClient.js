@@ -100,19 +100,3 @@ export async function fetchFileContent(accessToken, fullName, path) {
   if (!res.ok) return null;
   return res.text();
 }
-
-/// Fetch recent commits for a repository.
-///
-/// @param {string} accessToken - GitHub access token
-/// @param {string} fullName - Repository full name (owner/repo)
-/// @param {string} [since] - ISO 8601 timestamp to fetch commits since
-/// @returns {Promise<Array>} Array of commit objects
-export async function fetchCommits(accessToken, fullName, since) {
-  const url = new URL(`${GITHUB_API}/repos/${fullName}/commits`);
-  if (since) url.searchParams.set('since', since);
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/vnd.github+json' },
-  });
-  if (!res.ok) return [];
-  return res.json();
-}

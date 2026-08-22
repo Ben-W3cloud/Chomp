@@ -12,7 +12,7 @@
 /// This is the heart of the Chomp app - where all the AI magic happens.
 
 import { query } from '../db.js';
-import { fetchReadme, fetchRepoTree, fetchCommits, fetchFileContent } from './githubClient.js';
+import { fetchReadme, fetchRepoTree, fetchFileContent } from './githubClient.js';
 import { analyseCodeAndSecurity } from './nvidiaClient.js';
 import { evaluateDocsAndTests } from './groqClient.js';
 import { SCORE_DROP_NOTIFY_THRESHOLD } from './constants.js';
@@ -34,11 +34,6 @@ export async function scanRepo(repoRow, accessToken, onPhase = () => {}) {
     fetchReadme(accessToken, repoRow.full_name),
     fetchRepoTree(accessToken, repoRow.full_name, repoRow.default_branch),
   ]);
-  // recentCommits is fetched but not scored directly — it's exposed via
-  // GET /repos/:id (heatmap) rather than fed into the AI prompts, to
-  // keep the NVIDIA/Groq payloads small and cheap.
-  await fetchCommits(accessToken, repoRow.full_name);
-
   onPhase('ingesting', `Ingesting ${fileTree.length} files...`);
   const sampleFiles = await pickSampleFiles(accessToken, repoRow.full_name, fileTree);
 

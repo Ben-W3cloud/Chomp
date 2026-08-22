@@ -10,6 +10,7 @@
 
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
+import { asyncHandler } from '../middleware/asyncHandler.js';
 import { query } from '../db.js';
 import { decryptToken } from '../lib/crypto.js';
 import { fetchRepos } from '../lib/githubClient.js';
@@ -75,12 +76,12 @@ reposRouter.post('/github/sync-repos', requireAuth, async (req, res) => {
 ///
 /// @route GET /repos
 /// @returns {Object} List of repos with watch status
-reposRouter.get('/repos', requireAuth, async (req, res) => {
+reposRouter.get('/repos', requireAuth, asyncHandler(async (req, res) => {
   const result = await query('select * from repos where user_id = $1 order by last_pushed_at desc', [
     req.userId,
   ]);
   res.json({ repos: result.rows.map(toRepoJson) });
-});
+}));
 
 /// Add a repository to the manual watchlist.
 ///
@@ -88,7 +89,7 @@ reposRouter.get('/repos', requireAuth, async (req, res) => {
 ///
 /// @route POST /repos/:id/watch
 /// @returns {Object} Success status
-reposRouter.post('/repos/:id/watch', requireAuth, async (req, res) => {
+reposRouter.post('/repos/:id/watch', requireAuth, asyncHandler(async (req, res) => {
   const countRow = await query(
     'select count(*) from repos where user_id = $1 and is_manually_watched = true',
     [req.userId],
@@ -101,44 +102,47 @@ reposRouter.post('/repos/:id/watch', requireAuth, async (req, res) => {
     req.userId,
   ]);
   res.json({ ok: true });
-});
+}));
 
 /// Remove a repository from the manual watchlist.
 ///
 /// @route POST /repos/:id/unwatch
 /// @returns {Object} Success status
-reposRouter.post('/repos/:id/unwatch', requireAuth, async (req, res) => {
+reposRouter.post('/repos/:id/unwatch', requireAuth, asyncHandler(async (req, res) => {
   await query('update repos set is_manually_watched = false where id = $1 and user_id = $2', [
     req.params.id,
     req.userId,
   ]);
   res.json({ ok: true });
-});
+}));
 
 /// Get scan history for a repository.
 ///
 /// @route GET /repos/:id/scans
 /// @param {number} limit - Max number of scans to return (default: 30)
 /// @returns {Object} List of scan results
-reposRouter.get('/repos/:id/scans', requireAuth, async (req, res) => {
+reposRouter.get('/repos/:id/scans', requireAuth, asyncHandler(async (req, res) => {
   const limit = Number(req.query.limit ?? 30);
+  if (!Number.isFinite(limit) || limit <= 0) {
+    return res.status(400).json({ error: 'Invalid limit' });
+  }
   const result = await query(
     'select * from scan_results where repo_id = $1 order by scanned_at desc limit $2',
     [req.params.id, limit],
   );
   res.json({ scans: result.rows });
-});
+}));
 
 /// Get alerts for a repository.
 ///
 /// @route GET /repos/:id/alerts
 /// @returns {Object} List of alerts
-reposRouter.get('/repos/:id/alerts', requireAuth, async (req, res) => {
+reposRouter.get('/repos/:id/alerts', requireAuth, asyncHandler(async (req, res) => {
   const result = await query('select * from alerts where repo_id = $1 order by created_at desc', [
     req.params.id,
   ]);
   res.json({ alerts: result.rows });
-});
+}));
 
 /// Converts a database row to a JSON-serializable repo object.
 function toRepoJson(row) {

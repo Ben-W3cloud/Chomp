@@ -5,13 +5,40 @@ import { query } from '../db.js';
 const router = Router();
 const WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET;
 
-router.post('/github/webhook', async (req, res) => {
-  const signature = req.headers['x-hub-signature-256'];
-  const payload = req.body;
-  const hmac = crypto.createHmac('sha256', WEBHOOK_SECRET);
-  const digest = 'sha256=' + hmac.update(JSON.stringify(payload)).digest('hex');
+/// Constant-time comparison to avoid timing attacks on the signature.
+function safeEqual(a, b) {
+  const bufA = Buffer.from(a ?? '');
+  const bufB = Buffer.from(b ?? '');
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
 
-  if (signature !== digest) return res.status(401).send('Invalid signature');
+router.post('/github/webhook', async (req, res) => {
+  if (!WEBHOOK_SECRET) {
+    console.error('GITHUB_WEBHOOK_SECRET is not set; refusing webhook.');
+    return res.status(500).send('Server misconfiguration');
+  }
+
+  // `req.body` is a Buffer here because index.js applies the raw body
+  // parser for this route. Verifying the HMAC over the raw bytes is what
+  // GitHub expects — re-serializing loses the exact byte sequence.
+  const signature = req.headers['x-hub-signature-256'];
+  const rawBody = req.body;
+  if (!Buffer.isBuffer(rawBody)) {
+    return res.status(400).send('Expected raw body');
+  }
+
+  const hmac = crypto.createHmac('sha256', WEBHOOK_SECRET);
+  const digest = 'sha256=' + hmac.update(rawBody).digest('hex');
+
+  if (!safeEqual(signature, digest)) return res.status(401).send('Invalid signature');
+
+  let payload;
+  try {
+    payload = JSON.parse(rawBody.toString('utf8'));
+  } catch {
+    return res.status(400).send('Invalid JSON');
+  }
 
   const event = req.headers['x-github-event'];
   const repoFullName = payload.repository?.full_name;

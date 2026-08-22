@@ -5,6 +5,7 @@
 
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
+import { asyncHandler } from '../middleware/asyncHandler.js';
 import { query } from '../db.js';
 
 export const notificationsRouter = Router();
@@ -17,7 +18,7 @@ export const notificationsRouter = Router();
 /// @route POST /notifications/register-device
 /// @param {string} fcm_token - Firebase Cloud Messaging device token
 /// @returns {Object} Success status
-notificationsRouter.post('/notifications/register-device', requireAuth, async (req, res) => {
+notificationsRouter.post('/notifications/register-device', requireAuth, asyncHandler(async (req, res) => {
   const { fcm_token } = req.body;
   if (!fcm_token) return res.status(400).json({ error: 'Missing fcm_token' });
   await query(
@@ -26,4 +27,4 @@ notificationsRouter.post('/notifications/register-device', requireAuth, async (r
     [req.userId, fcm_token],
   );
   res.json({ ok: true });
-});
+}));

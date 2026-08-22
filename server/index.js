@@ -12,6 +12,7 @@
 /// Requires Node 18+ (uses global fetch).
 
 import express from 'express';
+import cors from 'cors';
 import 'dotenv/config';
 import { authRouter } from './routes/auth.js';
 import { reposRouter } from './routes/repos.js';
@@ -21,11 +22,28 @@ import { notificationsRouter } from './routes/notifications.js';
 import { internalCronRouter } from './routes/internalCron.js';
 import { webhookRouter } from './routes/webhooks.js';
 import { generalLimiter, authLimiter, scanLimiter } from './middleware/rateLimiter.js';
+import { assertRequiredSecrets } from './lib/constants.js';
+
+// Fail fast if required secrets/env are missing so misconfiguration is
+// obvious instead of surfacing as undefined-comparison auth bypasses.
+assertRequiredSecrets();
 
 const app = express();
 
-// Parse JSON request bodies
-app.use(express.json());
+// Trust the proxy in front of the server (Render, Nginx, etc.) so rate
+// limiting keys off the real client IP rather than the proxy's.
+app.set('trust proxy', 1);
+
+// CORS. Native mobile clients are unaffected, but this keeps a future web
+// front-end working. Restrict origins via CORS_ORIGIN (comma-separated);
+// defaults to reflecting the request origin.
+const corsOrigin = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim())
+  : true;
+app.use(cors({ origin: corsOrigin, credentials: true }));
+
+// Parse JSON request bodies (limit to bound memory usage).
+app.use(express.json({ limit: '1mb' }));
 
 // Apply general rate limiting to all routes
 app.use(generalLimiter);
@@ -41,6 +59,9 @@ app.use(scanRouter);
 app.use(feedRouter);
 app.use(notificationsRouter);
 app.use(internalCronRouter);
+// Webhook needs the RAW body to verify GitHub's HMAC signature, so the
+// raw parser must run for this path (it overwrites the JSON parse above).
+app.use('/github/webhook', express.raw({ type: 'application/json' }));
 app.use(webhookRouter);
 
 // Health check endpoint

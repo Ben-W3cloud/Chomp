@@ -5,6 +5,7 @@
 
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
+import { asyncHandler } from '../middleware/asyncHandler.js';
 import { query } from '../db.js';
 
 export const feedRouter = Router();
@@ -17,8 +18,11 @@ export const feedRouter = Router();
 /// @route GET /feed
 /// @param {number} limit - Max number of items to return (default: 50)
 /// @returns {Object} List of feed items with repo names
-feedRouter.get('/feed', requireAuth, async (req, res) => {
+feedRouter.get('/feed', requireAuth, asyncHandler(async (req, res) => {
   const limit = Number(req.query.limit ?? 50);
+  if (!Number.isFinite(limit) || limit <= 0) {
+    return res.status(400).json({ error: 'Invalid limit' });
+  }
   const result = await query(
     `select f.*, r.name as repo_name from feed_items f
      join repos r on r.id = f.repo_id
@@ -26,4 +30,4 @@ feedRouter.get('/feed', requireAuth, async (req, res) => {
     [req.userId, limit],
   );
   res.json({ items: result.rows });
-});
+}));
