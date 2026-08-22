@@ -173,14 +173,11 @@ class _RepoRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            if (removable || onAdd != null)
-              Icon(
-                repo.isAutoWatched ? Icons.bolt_rounded : Icons.bolt_rounded,
-                size: 18,
-                color: removable ? AppColors.danger : AppColors.brand,
-              )
-            else
-              const Icon(Icons.bolt_rounded, size: 18, color: AppColors.brand),
+            Icon(
+              Icons.bolt_rounded,
+              size: 18,
+              color: removable ? AppColors.danger : AppColors.brand,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(

@@ -10,6 +10,7 @@
 /// allowing multiple repos to be scanned independently.
 library;
 
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/scan_result.dart';
 import '../services/scan_engine.dart';
@@ -59,6 +60,7 @@ class ScanNotifier extends StateNotifier<Map<String, RepoScanState>> {
   ScanNotifier(this._engine, this._data) : super({});
   final ScanEngine _engine;
   final ChompDataService _data;
+  StreamSubscription<ScanPhaseEvent>? _subscription;
 
   /// Gets the scan state for a specific repository.
   ///
@@ -81,8 +83,11 @@ class ScanNotifier extends StateNotifier<Map<String, RepoScanState>> {
   /// into the log. When the scan completes, updates the state with
   /// the final result. Clears the previous log and result.
   Future<void> runScan(String repoId) async {
+    // Cancel any in-flight scan for this repo before starting a new one so
+    // we don't stack subscriptions (which leak the underlying SSE socket).
+    _subscription?.cancel();
     _update(repoId, const RepoScanState(isScanning: true, log: []));
-    _engine.runScan(repoId).listen(
+    _subscription = _engine.runScan(repoId).listen(
       (event) {
         final current = stateFor(repoId);
         var next = current.copyWith(log: [...current.log, event]);
@@ -96,6 +101,11 @@ class ScanNotifier extends StateNotifier<Map<String, RepoScanState>> {
         }
         _update(repoId, next);
       },
+      onError: (err) {
+        final current = stateFor(repoId);
+        _update(repoId,
+            current.copyWith(isScanning: false, error: 'Scan failed. Please try again.'));
+      },
       onDone: () {
         final current = stateFor(repoId);
         if (current.isScanning) {
@@ -103,6 +113,12 @@ class ScanNotifier extends StateNotifier<Map<String, RepoScanState>> {
         }
       },
     );
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 
   /// Dismisses the error state for a specific repository.

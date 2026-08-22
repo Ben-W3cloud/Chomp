@@ -183,7 +183,7 @@ class _WatchPill extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: filled ? color : color,
+              color: color,
               fontWeight: FontWeight.w700,
             ),
       ),

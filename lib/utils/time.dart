@@ -15,6 +15,3 @@ String relativeTime(DateTime dt) {
   if (diff.inDays < 30) return '${diff.inDays ~/ 7}w';
   return DateFormat('d MMM').format(local);
 }
-
-/// Deterministic brightness step for staggered list entrances.
-double staggerDelay(int index) => (index * 45).clamp(0, 320).toDouble();

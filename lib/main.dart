@@ -32,25 +32,6 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 /// App entry point.
-// Future<void> main() async {
-//   WidgetsFlutterBinding.ensureInitialized();
-//   await Env.load();
-//   await Firebase.initializeApp();
-//   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-//   await NotificationService.instance.init();
-
-//   // Load persisted settings before the first frame so the theme the
-//   // user chose is applied immediately — no flash of the default.
-//   final container = ProviderContainer();
-//   await container.read(settingsProvider.notifier).load();
-
-//   runApp(
-//       UncontrolledProviderScope(container: container, child: const ChompApp()));
-// }
-
-// /// Root app widget.
-// ///
-
 Future<void> main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -59,13 +40,14 @@ Future<void> main() async {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     await NotificationService.instance.init();
 
-    FlutterError.onError = (details) {
-      FlutterError.presentError(details);
-      debugPrint('FLUTTER ERROR: ${details.exception}');
-      debugPrint('${details.stack}');
-    };
+    // Load persisted settings (theme, notification prefs) before the first
+    // frame so the user's chosen theme is applied immediately — no flash
+    // of the default.
+    final container = ProviderContainer();
+    await container.read(settingsProvider.notifier).load();
 
-    runApp(const ProviderScope(child: ChompApp()));
+    runApp(
+        UncontrolledProviderScope(container: container, child: const ChompApp()));
   }, (error, stack) {
     debugPrint('UNCAUGHT ERROR: $error');
     debugPrint('$stack');

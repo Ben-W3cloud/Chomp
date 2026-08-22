@@ -1,7 +1,4 @@
 class AppConstants {
-  /// The display name of the application.
-  static const appName = 'Chomp';
-
   /// Number of most recently active repos automatically added to watchlist.
   static const autoWatchCount = 3;
 
@@ -10,12 +7,6 @@ class AppConstants {
 
   /// Combined maximum watchlist size (auto + manual).
   static const maxWatchlistTotal = autoWatchCount + maxManualWatchlist;
-
-  /// How often the server scans watched repos (in hours).
-  static const scanIntervalHours = 1;
-
-  /// Default score drop threshold that triggers a notification.
-  static const defaultScoreDropThreshold = 10;
 }
 
 /// Backend API endpoint paths.

@@ -8,6 +8,7 @@ library;
 
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
+import '../../core/constants.dart';
 import '../../services/api_client.dart';
 import '../../widgets/brand_mark.dart';
 import '../home/home_screen.dart';
@@ -47,7 +48,23 @@ class _SplashScreenState extends State<SplashScreen>
     // Give the mark a beat to breathe before moving on.
     await Future.delayed(const Duration(milliseconds: 1400));
     if (!mounted) return;
-    final signedIn = await ApiClient.instance.sessionToken != null;
+
+    // A stored token alone isn't enough — it may be expired. Validate it
+    // against the backend; if it's rejected, clear it and start signed out.
+    final token = await ApiClient.instance.sessionToken;
+    var signedIn = token != null;
+    if (signedIn) {
+      try {
+        await ApiClient.instance.get(ApiEndpoints.me);
+      } on ApiException {
+        await ApiClient.instance.clearSession();
+        signedIn = false;
+      } catch (_) {
+        // Network/other error — stay signed in to avoid locking the user out
+        // offline. The next API call will surface auth failures if needed.
+      }
+    }
+
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(

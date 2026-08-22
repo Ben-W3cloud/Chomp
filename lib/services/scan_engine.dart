@@ -16,6 +16,7 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../core/constants.dart';
 import 'api_client.dart';
 
@@ -69,10 +70,12 @@ class ScanEngine {
   /// Internal method that manages the SSE connection and event parsing.
   Future<void> _stream(
       String repoId, StreamController<ScanPhaseEvent> controller) async {
+    http.Client? client;
     try {
       // Open SSE connection to the backend
-      final streamed =
+      final (streamed, openedClient) =
           await _api.openStream('${ApiEndpoints.scanRepo}/$repoId');
+      client = openedClient;
       final lines = streamed.stream
           .transform(utf8.decoder)
           .transform(const LineSplitter());
@@ -98,17 +101,25 @@ class ScanEngine {
           ));
           eventName = null;
           if (phase == ScanPhase.complete || phase == ScanPhase.error) {
-            await controller.close();
+            _safeClose(controller);
             return;
           }
         }
       }
-      await controller.close();
+      _safeClose(controller);
     } catch (e) {
-      controller.add(
-          ScanPhaseEvent(ScanPhase.error, 'Scan failed. Please try again.'));
-      await controller.close();
+      controller.add(const ScanPhaseEvent(
+          ScanPhase.error, 'Scan failed. Please try again.'));
+      _safeClose(controller);
+    } finally {
+      client?.close();
     }
+  }
+
+  /// Closes the controller without throwing if it was already closed
+  /// (e.g. the consumer cancelled the subscription mid-stream).
+  void _safeClose(StreamController<ScanPhaseEvent> controller) {
+    if (!controller.isClosed) controller.close();
   }
 
   /// Converts a raw phase string from the server to a [ScanPhase] enum.

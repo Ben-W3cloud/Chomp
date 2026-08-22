@@ -24,12 +24,17 @@ import 'notification_service.dart';
 /// the foreground, it's displayed as a local notification.
 class FcmService {
   final _api = ApiClient.instance;
+  bool _listenersRegistered = false;
 
   /// Initializes FCM and registers the device token with the backend.
   ///
   /// Requests notification permissions, gets the FCM token, and
   /// sends it to our backend for storage. Also sets up a listener
   /// for token refreshes (e.g., when the app is reinstalled).
+  ///
+  /// The global FCM listeners are registered only once so re-entering
+  /// [HomeScreen] (e.g. after sign-out/sign-in) doesn't stack them and
+  /// produce duplicate local notifications.
   Future<void> init() async {
     final messaging = FirebaseMessaging.instance;
 
@@ -40,16 +45,19 @@ class FcmService {
     final token = await messaging.getToken();
     if (token != null) await _registerToken(token);
 
-    // Listen for token refreshes (e.g., app reinstall, token expiry)
-    messaging.onTokenRefresh.listen(_registerToken);
+    if (!_listenersRegistered) {
+      // Listen for token refreshes (e.g., app reinstall, token expiry)
+      messaging.onTokenRefresh.listen(_registerToken);
 
-    // Listen for incoming push notifications
-    FirebaseMessaging.onMessage.listen((message) {
-      final title = message.notification?.title ?? 'Chomp';
-      final body =
-          message.notification?.body ?? 'A watched repo has an update.';
-      NotificationService.instance.showAlert(title: title, body: body);
-    });
+      // Listen for incoming push notifications
+      FirebaseMessaging.onMessage.listen((message) {
+        final title = message.notification?.title ?? 'Chomp';
+        final body =
+            message.notification?.body ?? 'A watched repo has an update.';
+        NotificationService.instance.showAlert(title: title, body: body);
+      });
+      _listenersRegistered = true;
+    }
   }
 
   /// Registers an FCM token with the backend.

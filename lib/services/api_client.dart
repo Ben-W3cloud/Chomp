@@ -83,8 +83,9 @@ class ApiClient {
   ///
   /// Extracts a user-friendly error message from the response body
   /// when possible, falling back to a generic message for non-JSON
-  /// or unexpected responses.
-  dynamic _handle(http.Response res) {
+  /// or unexpected responses. On a 401 the stored session is cleared
+  /// so the app can't get wedged in a signed-in-but-dead state.
+  Future<dynamic> _handle(http.Response res) async {
     if (res.statusCode >= 200 && res.statusCode < 300) {
       if (res.body.isEmpty) return null;
       return jsonDecode(res.body);
@@ -100,18 +101,22 @@ class ApiClient {
           ? 'Server error. Please try again.'
           : 'Request failed. Please try again.';
     }
+    if (res.statusCode == 401) await clearSession();
     throw ApiException(res.statusCode, message);
   }
 
   /// Opens a Server-Sent Events connection.
   ///
   /// Used only by [ScanEngine] for the live "Scan Again" phase log.
-  /// Returns a [http.StreamedResponse] that can be read line-by-line.
-  Future<http.StreamedResponse> openStream(String path) async {
+  /// Returns the [http.StreamedResponse] alongside the [http.Client]
+  /// that owns the underlying connection — the caller MUST close the
+  /// client when the stream is done to avoid leaking sockets.
+  Future<(http.StreamedResponse, http.Client)> openStream(String path) async {
     final request = http.Request('POST', _uri(path));
     request.headers.addAll(await _authHeaders());
     request.headers['Accept'] = 'text/event-stream';
     final client = http.Client();
-    return client.send(request);
+    final response = await client.send(request);
+    return (response, client);
   }
 }
